@@ -8,3 +8,4 @@ node_modules/
 src/reports/html-report/
 src/reports/json-report/
 src/reports/screenshots/
+package-lock.json

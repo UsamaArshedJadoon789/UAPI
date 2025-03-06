@@ -136,3 +136,14 @@ The framework configuration is stored in `src/config/config.ts`. You can modify 
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Environment Variables
+
+The framework uses environment variables for sensitive information such as credentials. Create a `.env` file in the root directory with the following variables:
+
+```
+UAPI_USERNAME=your_username
+UAPI_PASSWORD=your_password
+```
+
+For local development, you can create a `.env` file based on the provided `.env.example` file.

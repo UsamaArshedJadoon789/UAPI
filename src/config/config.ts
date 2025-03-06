@@ -1,8 +1,8 @@
 export const config = {
   baseUrl: 'https://qc.uapi.sa',
   credentials: {
-    username: 'fewer001',
-    password: 'Kathir123$'
+    username: process.env.UAPI_USERNAME || '',
+    password: process.env.UAPI_PASSWORD || ''
   },
   timeout: {
     short: 5000,
