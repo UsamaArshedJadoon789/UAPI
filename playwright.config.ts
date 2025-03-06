@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { config as testConfig } from './src/config/config';
+import path from 'path';
 
 export default defineConfig({
   testDir: './src/tests',
@@ -13,7 +14,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [
     ['html', { outputFolder: 'src/reports/html-report' }],
-    ['json', { outputFile: 'src/reports/json-report/test-results.json' }]
+    ['json', { outputFile: 'src/reports/json-report/test-results.json' }],
+    ['./src/utils/reporting/CustomReporter.ts']
   ],
   use: {
     baseURL: testConfig.baseUrl,

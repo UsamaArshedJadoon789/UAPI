@@ -147,3 +147,38 @@ UAPI_PASSWORD=your_password
 ```
 
 For local development, you can create a `.env` file based on the provided `.env.example` file.
+
+## Reporting
+
+The framework provides comprehensive reporting capabilities with both HTML and PDF formats:
+
+### HTML Reports
+
+HTML reports are automatically generated after test execution and provide interactive features for detailed analysis:
+
+- Test execution summary
+- Detailed test results with pass/fail status
+- Error messages and stack traces for failed tests
+- Screenshots captured during test execution
+- Test execution timeline
+
+To view the HTML report:
+```bash
+npm run report
+```
+
+### PDF Reports
+
+PDF reports are generated for formal documentation and sharing:
+
+- Complete test summary
+- Detailed test results
+- Error information for failed tests
+- Screenshots of failures
+
+To generate custom reports (both HTML and PDF):
+```bash
+npm run report:custom
+```
+
+Both report formats are generated from the same test execution results, ensuring consistency in reporting.
