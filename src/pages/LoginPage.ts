@@ -19,7 +19,19 @@ export class LoginPage extends BasePage {
   }
 
   async navigateToLoginPage(): Promise<void> {
+    console.log('Navigating to login page');
     await this.navigate('/login');
+    
+    // Wait for page to be fully loaded across all browsers
+    await Promise.all([
+      this.page.waitForLoadState('domcontentloaded'),
+      this.page.waitForLoadState('networkidle'),
+      this.page.waitForTimeout(1000) // Additional wait for stability across browsers
+    ]).catch(error => {
+      console.log('Warning: Page load state wait failed, continuing anyway:', error.message);
+    });
+    
+    console.log('Navigated to', this.page.url());
     await this.waitForLoginPageLoad();
   }
 
@@ -40,18 +52,58 @@ export class LoginPage extends BasePage {
   async login(username: string = config.credentials.username, password: string = config.credentials.password): Promise<void> {
     await this.navigateToLoginPage();
     
-    // Fill in credentials with retry mechanism
+    console.log(`Attempting login with username: ${username}`);
+    
+    // Fill in credentials with retry mechanism and cross-browser handling
     await TestHelper.retry(async () => {
+      // Clear fields first to ensure clean input across browsers
+      await this.fill(this.usernameInput, '');
+      await this.fill(this.passwordInput, '');
+      
+      // Fill in credentials with explicit focus and blur events for cross-browser compatibility
+      await this.page.focus(this.usernameInput);
       await this.fill(this.usernameInput, username);
+      await this.page.waitForTimeout(100); // Small delay for stability
+      
+      await this.page.focus(this.passwordInput);
       await this.fill(this.passwordInput, password);
+      await this.page.waitForTimeout(100); // Small delay for stability
+    }, {
+      maxRetries: 3,
+      initialDelay: 1000,
+      onRetry: (error, attempt) => {
+        console.log(`Retrying credential input (attempt ${attempt}): ${error.message}`);
+      }
     });
     
-    // Click login button and wait for navigation
-    await this.click(this.loginButton);
+    // Click login button and wait for navigation with cross-browser handling
+    console.log('Clicking login button');
+    await Promise.all([
+      // Set up navigation promise before click
+      this.page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => {
+        console.log('Navigation promise rejected, but continuing:', e.message);
+      }),
+      this.click(this.loginButton)
+    ]).catch(e => {
+      console.log('Promise.all for navigation failed, but continuing:', e.message);
+    });
     
-    // Wait for navigation to dashboard
+    // Wait for navigation to dashboard with enhanced retry for cross-browser compatibility
     await TestHelper.retry(async () => {
-      await this.page.waitForURL('**/dashboard', { timeout: config.timeout.long });
+      // Check URL first
+      const currentUrl = this.page.url();
+      if (currentUrl.includes('dashboard')) {
+        console.log('Successfully navigated to dashboard URL');
+        return;
+      }
+      
+      // If URL check fails, wait for dashboard URL or element
+      await Promise.race([
+        this.page.waitForURL('**/dashboard', { timeout: 10000 }),
+        this.page.waitForSelector('h1:has-text("Dashboard"), .dashboard-header', { timeout: 10000 })
+      ]);
+      
+      console.log('Dashboard detected via element or URL');
     }, {
       maxRetries: 5,
       initialDelay: 2000,
@@ -60,6 +112,8 @@ export class LoginPage extends BasePage {
         console.log(`Waiting for dashboard navigation (attempt ${attempt}): ${error.message}`);
       }
     });
+    
+    console.log('Login successful');
   }
 
   async getErrorMessage(): Promise<string | null> {
