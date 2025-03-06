@@ -1,2 +1,138 @@
-# UAPI Automation
-This repository contains automation tests for the UAPI system.
+# UAPI Automation Framework
+
+An advanced Playwright TypeScript automation framework for UAPI with self-healing capabilities.
+
+## Features
+
+- **Self-Healing Mechanism**: Automatically recovers from selector changes
+- **Page Object Model**: Well-structured and maintainable code
+- **Comprehensive Reporting**: HTML and JSON reports
+- **Parallel Test Execution**: Run tests in parallel for faster execution
+- **Cross-Browser Testing**: Support for Chromium, Firefox, and WebKit
+- **Retry Mechanism**: Automatically retry flaky tests
+- **Screenshot Capture**: Capture screenshots on test failures
+- **Video Recording**: Record videos of test executions
+
+## Framework Structure
+
+```
+UAPI-Automation/
+├── src/
+│   ├── config/
+│   │   └── config.ts
+│   ├── pages/
+│   │   ├── BasePage.ts
+│   │   ├── LoginPage.ts
+│   │   └── DashboardPage.ts
+│   ├── tests/
+│   │   ├── smoke/
+│   │   │   ├── login.spec.ts
+│   │   │   └── dashboard-validation.spec.ts
+│   │   └── regression/
+│   │       └── login-edge-cases.spec.ts
+│   ├── utils/
+│   │   └── self-healing/
+│   │       ├── SelfHealingLocator.ts
+│   │       ├── SelfHealingReporter.ts
+│   │       └── strategies/
+│   │           ├── AttributeStrategy.ts
+│   │           ├── CssStrategy.ts
+│   │           ├── XPathStrategy.ts
+│   │           ├── TextContentStrategy.ts
+│   │           └── PositionStrategy.ts
+│   └── helpers/
+│       └── TestHelper.ts
+├── playwright.config.ts
+├── tsconfig.json
+├── package.json
+└── README.md
+```
+
+## Self-Healing Mechanism
+
+The framework includes a robust self-healing mechanism that automatically attempts to find elements using alternative strategies when the original selector fails. This makes the tests more resilient to UI changes.
+
+### Self-Healing Strategies
+
+1. **Attribute Strategy**: Converts CSS selectors to attribute-based selectors
+2. **CSS Strategy**: Tries different CSS combinations and simplifications
+3. **XPath Strategy**: Converts CSS to XPath expressions
+4. **Text Content Strategy**: Finds elements by their text content
+5. **Position Strategy**: Locates elements by their position in the DOM
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/UsamaArshedJadoon789/UAPI-Automation.git
+   cd UAPI-Automation
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Install Playwright browsers:
+   ```bash
+   npx playwright install
+   ```
+
+## Running Tests
+
+### Run all tests:
+```bash
+npm test
+```
+
+### Run smoke tests:
+```bash
+npm run test:smoke
+```
+
+### Run regression tests:
+```bash
+npm run test:regression
+```
+
+### Run tests in specific browsers:
+```bash
+npm run test:chrome
+npm run test:firefox
+npm run test:safari
+```
+
+### Run tests with debugging:
+```bash
+npm run debug
+```
+
+## Generating Reports
+
+After running tests, HTML reports are automatically generated. To view the report:
+```bash
+npm run report
+```
+
+## Test Organization
+
+- **Smoke Tests**: Cover all positive test cases for every module and field
+- **Regression Tests**: Cover edge cases and negative testing scenarios
+
+## Configuration
+
+The framework configuration is stored in `src/config/config.ts`. You can modify the following settings:
+
+- Base URL
+- Credentials
+- Timeouts
+- Retry attempts
+- Self-healing settings
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
