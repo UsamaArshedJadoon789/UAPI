@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { config } from '../config/config';
 import { TestHelper } from '../helpers/TestHelper';
+import { BrowserHelper } from '../utils/helpers/BrowserHelper';
 
 export class LoginPage extends BasePage {
   // Selectors with multiple strategies for self-healing
@@ -54,66 +55,103 @@ export class LoginPage extends BasePage {
     
     console.log(`Attempting login with username: ${username}`);
     
+    // Get browser-specific information
+    const browserType = await BrowserHelper.detectBrowserType(this.page);
+    console.log(`Login process for browser: ${browserType}`);
+    
     // Fill in credentials with retry mechanism and cross-browser handling
     await TestHelper.retry(async () => {
       // Clear fields first to ensure clean input across browsers
       await this.fill(this.usernameInput, '');
       await this.fill(this.passwordInput, '');
       
+      // Apply browser-specific timing adjustments
+      await BrowserHelper.applyTimingAdjustments(this.page);
+      
       // Fill in credentials with explicit focus and blur events for cross-browser compatibility
       await this.page.focus(this.usernameInput);
       await this.fill(this.usernameInput, username);
-      await this.page.waitForTimeout(100); // Small delay for stability
+      
+      // Browser-specific delay
+      const usernameDelay = browserType === 'webkit' ? 300 : browserType === 'firefox' ? 200 : 100;
+      await this.page.waitForTimeout(usernameDelay);
       
       await this.page.focus(this.passwordInput);
       await this.fill(this.passwordInput, password);
-      await this.page.waitForTimeout(100); // Small delay for stability
+      
+      // Browser-specific delay
+      const passwordDelay = browserType === 'webkit' ? 300 : browserType === 'firefox' ? 200 : 100;
+      await this.page.waitForTimeout(passwordDelay);
     }, {
-      maxRetries: 3,
-      initialDelay: 1000,
+      maxRetries: browserType === 'webkit' ? 5 : browserType === 'firefox' ? 4 : 3,
+      initialDelay: browserType === 'webkit' ? 2000 : browserType === 'firefox' ? 1500 : 1000,
       onRetry: (error, attempt) => {
-        console.log(`Retrying credential input (attempt ${attempt}): ${error.message}`);
+        console.log(`Retrying credential input for ${browserType} (attempt ${attempt}): ${error.message}`);
       }
     });
     
     // Click login button and wait for navigation with cross-browser handling
-    console.log('Clicking login button');
-    await Promise.all([
-      // Set up navigation promise before click
-      this.page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => {
-        console.log('Navigation promise rejected, but continuing:', e.message);
-      }),
-      this.click(this.loginButton)
-    ]).catch(e => {
-      console.log('Promise.all for navigation failed, but continuing:', e.message);
-    });
+    console.log(`Clicking login button in ${browserType}`);
     
+    // Get browser-specific timeout
+    const navigationTimeout = await BrowserHelper.getBrowserSpecificTimeout(this.page, 30000);
+    
+    // Different approach for different browsers
+    if (browserType === 'webkit') {
+      // WebKit sometimes needs a different approach
+      await this.click(this.loginButton);
+      await this.page.waitForTimeout(1000); // Give WebKit time to process the click
+      
+      // Wait for navigation with enhanced retry
+      await this.waitForDashboardNavigation(browserType);
+    } else {
+      // For Chromium and Firefox
+      try {
+        await Promise.all([
+          // Set up navigation promise before click
+          this.page.waitForNavigation({ waitUntil: 'networkidle', timeout: navigationTimeout }).catch(e => {
+            console.log(`Navigation promise rejected in ${browserType}, but continuing:`, e.message);
+          }),
+          this.click(this.loginButton)
+        ]);
+      } catch (e: any) {
+        console.log(`Promise.all for navigation failed in ${browserType}, but continuing:`, e.message || 'Unknown error');
+        // Still wait for dashboard navigation
+        await this.waitForDashboardNavigation(browserType);
+      }
+    }
+    
+    console.log(`Login successful in ${browserType}`);
+  }
+  
+  // Helper method for dashboard navigation
+  private async waitForDashboardNavigation(browserType: string): Promise<void> {
     // Wait for navigation to dashboard with enhanced retry for cross-browser compatibility
     await TestHelper.retry(async () => {
       // Check URL first
       const currentUrl = this.page.url();
       if (currentUrl.includes('dashboard')) {
-        console.log('Successfully navigated to dashboard URL');
+        console.log(`Successfully navigated to dashboard URL in ${browserType}`);
         return;
       }
       
-      // If URL check fails, wait for dashboard URL or element
+      // If URL check fails, wait for dashboard URL or element with browser-specific timeout
+      const timeout = await BrowserHelper.getBrowserSpecificTimeout(this.page, 10000);
+      
       await Promise.race([
-        this.page.waitForURL('**/dashboard', { timeout: 10000 }),
-        this.page.waitForSelector('h1:has-text("Dashboard"), .dashboard-header', { timeout: 10000 })
+        this.page.waitForURL('**/dashboard', { timeout }),
+        this.page.waitForSelector('h1:has-text("Dashboard"), .dashboard-header', { timeout })
       ]);
       
-      console.log('Dashboard detected via element or URL');
+      console.log(`Dashboard detected via element or URL in ${browserType}`);
     }, {
-      maxRetries: 5,
-      initialDelay: 2000,
+      maxRetries: browserType === 'webkit' ? 7 : browserType === 'firefox' ? 6 : 5,
+      initialDelay: browserType === 'webkit' ? 3000 : browserType === 'firefox' ? 2500 : 2000,
       backoffFactor: 1.5,
       onRetry: (error, attempt) => {
-        console.log(`Waiting for dashboard navigation (attempt ${attempt}): ${error.message}`);
+        console.log(`Waiting for dashboard navigation in ${browserType} (attempt ${attempt}): ${error.message}`);
       }
     });
-    
-    console.log('Login successful');
   }
 
   async getErrorMessage(): Promise<string | null> {

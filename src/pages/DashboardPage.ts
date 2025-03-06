@@ -2,6 +2,7 @@ import { Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { TestHelper } from '../helpers/TestHelper';
 import { SelfHealingReporter } from '../utils/self-healing/SelfHealingReporter';
+import { BrowserHelper } from '../utils/helpers/BrowserHelper';
 
 export class DashboardPage extends BasePage {
   // Dashboard header selectors with multiple strategies for self-healing
@@ -68,18 +69,39 @@ export class DashboardPage extends BasePage {
   }
 
   async validateAllMenuItems(): Promise<void> {
-    // Validate all menu items are visible
+    // Validate all menu items are visible with browser-specific handling
+    const browserType = await BrowserHelper.detectBrowserType(this.page);
+    
     for (const [name, selector] of Object.entries(this.menuItems)) {
-      console.log(`Validating menu item: ${name}`);
-      await this.expectToBeVisible(selector);
+      console.log(`Validating menu item: ${name} with selector: ${selector} in ${browserType} browser`);
+      
+      // Apply browser-specific timing adjustments
+      await BrowserHelper.applyTimingAdjustments(this.page);
+      
+      // Use browser-specific timeout for visibility check
+      const timeout = await BrowserHelper.getBrowserSpecificTimeout(this.page, 5000);
+      await this.expectToBeVisible(selector, { timeout });
     }
   }
 
   async clickMenuItem(menuItem: string): Promise<void> {
     const lowerMenuItem = menuItem.toLowerCase();
     if (this.menuItems[lowerMenuItem]) {
+      const browserType = await BrowserHelper.detectBrowserType(this.page);
+      console.log(`Clicking menu item: ${menuItem} in ${browserType} browser`);
+      
+      // Apply browser-specific timing adjustments before click
+      await BrowserHelper.applyTimingAdjustments(this.page);
+      
+      // Click with browser-specific handling
       await this.click(this.menuItems[lowerMenuItem]);
-      await TestHelper.waitForPageLoad(this.page);
+      
+      // Wait for page load with browser-specific timeout
+      const timeout = await BrowserHelper.getBrowserSpecificTimeout(this.page, 15000);
+      await this.page.waitForLoadState('networkidle', { timeout });
+      await this.page.waitForLoadState('domcontentloaded', { timeout });
+      
+      console.log(`Successfully clicked menu item: ${menuItem} in ${browserType} browser`);
     } else {
       throw new Error(`Menu item "${menuItem}" not found`);
     }
@@ -98,14 +120,30 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Get dashboard header text with self-healing capability
+   * Get dashboard header text with self-healing capability and browser-specific handling
    */
   public async getDashboardHeaderText(): Promise<string> {
     try {
-      const dashboardHeaderSelector = this.dashboardHeaderSelectors.join(', ');
+      // Use BrowserHelper to get browser-specific selector
+      const browserType = await BrowserHelper.detectBrowserType(this.page);
+      console.log(`Getting dashboard header text for browser: ${browserType}`);
       
-      // Wait for the element to be visible before interacting
-      await this.page.waitForSelector(dashboardHeaderSelector, { state: 'visible', timeout: 5000 })
+      // Define browser-specific selectors
+      const chromiumSelector = 'h1.dashboard-header, .sidebar h1';
+      const firefoxSelector = 'h1, .dashboard-header, .sidebar h1';
+      const webkitSelector = 'h1, .dashboard-header, .sidebar h1';
+      
+      // Get appropriate selector for current browser
+      const dashboardHeaderSelector = await BrowserHelper.getBrowserSpecificSelector(
+        this.page,
+        chromiumSelector,
+        firefoxSelector,
+        webkitSelector
+      );
+      
+      // Wait for the element to be visible before interacting with browser-specific timeout
+      const timeout = await BrowserHelper.getBrowserSpecificTimeout(this.page, 5000);
+      await this.page.waitForSelector(dashboardHeaderSelector, { state: 'visible', timeout })
         .catch(() => console.log('Dashboard header not immediately visible, trying fallback'));
         
       const headerElement = this.page.locator(dashboardHeaderSelector).first();
@@ -116,8 +154,8 @@ export class DashboardPage extends BasePage {
         return text ? text.trim() : 'Dashboard';
       }
       
-      // Fallback: Try to find any heading element
-      console.log('Attempting fallback for dashboard header...');
+      // Fallback: Try to find any heading element with browser-specific handling
+      console.log(`Attempting fallback for dashboard header in ${browserType} browser...`);
       const headings = this.page.locator('h1, h2, h3');
       const headingCount = await headings.count();
       
@@ -132,7 +170,7 @@ export class DashboardPage extends BasePage {
               const selfHealingReporter = new SelfHealingReporter();
               selfHealingReporter.recordHealingEvent({
                 page: 'Dashboard',
-                originalSelector: this.dashboardHeaderSelectors.join(', '),
+                originalSelector: dashboardHeaderSelector,
                 healedSelector: `h1, h2, h3 nth(${i})`,
                 strategy: 'Text Content-based',
                 success: true
@@ -144,6 +182,7 @@ export class DashboardPage extends BasePage {
       }
       
       // For mock testing, return a default value
+      console.log(`Using default dashboard header text for ${browserType} browser`);
       return 'Dashboard';
     } catch (error) {
       console.error('Error getting dashboard header text:', error);
