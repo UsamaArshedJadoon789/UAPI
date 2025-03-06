@@ -1,0 +1,35 @@
+{
+  "name": "uapi-automation",
+  "version": "1.0.0",
+  "description": "Advanced Playwright TypeScript automation framework for UAPI",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --project=smoke",
+    "test:regression": "playwright test --project=regression",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:safari": "playwright test --project=webkit",
+    "report": "playwright show-report src/reports/html-report",
+    "report:custom": "node src/utils/reporting/generate-report.js",
+    "report:self-healing": "ts-node src/utils/reporting/generate-self-healing-report.js",
+    "debug": "playwright test --debug",
+    "codegen": "playwright codegen"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "automation",
+    "testing",
+    "self-healing"
+  ],
+  "author": "Devin AI",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "puppeteer": "^21.5.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  }
+}
