@@ -182,3 +182,19 @@ npm run report:custom
 ```
 
 Both report formats are generated from the same test execution results, ensuring consistency in reporting.
+
+### Self-Healing Reports
+
+The framework also generates specialized reports for self-healing events:
+
+- JSON report with detailed healing event data
+- HTML report with visual representation of healing events
+- Strategy effectiveness analysis
+- Success rate metrics
+
+To generate self-healing reports:
+```bash
+npm run report:self-healing
+```
+
+These reports help identify which selectors are most prone to breaking and which healing strategies are most effective.
