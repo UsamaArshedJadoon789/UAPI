@@ -1,19 +1,32 @@
 import { Page, Route } from '@playwright/test';
+import { BrowserHelper } from '../helpers/BrowserHelper';
 
 /**
  * MockService - Provides mock responses for testing when the real website is unavailable
+ * with enhanced cross-browser compatibility
  */
 export class MockService {
   private readonly page: Page;
   private invalidCredentials: boolean = false;
   private static isMockEnabled: boolean = true;
+  private browserType: 'chromium' | 'firefox' | 'webkit' | 'unknown' = 'unknown';
 
   constructor(page: Page) {
     this.page = page;
+    // Initialize browser type detection
+    this.detectBrowserType();
+  }
+  
+  /**
+   * Detect browser type for browser-specific handling
+   */
+  private async detectBrowserType(): Promise<void> {
+    this.browserType = await BrowserHelper.detectBrowserType(this.page);
+    console.log(`MockService initialized for ${this.browserType} browser`);
   }
 
   /**
-   * Setup mock responses for the login page
+   * Setup mock responses for the login page with browser-specific handling
    */
   public async setupLoginMocks(): Promise<void> {
     if (!MockService.isMockEnabled) {
@@ -24,12 +37,16 @@ export class MockService {
     // Wait for browser to be ready before setting up mocks
     await this.page.waitForLoadState('domcontentloaded');
     
+    // Get browser type for browser-specific handling
+    const browserType = await BrowserHelper.detectBrowserType(this.page);
+    console.log(`Setting up login mocks for ${browserType} browser`);
+    
     // Mock the login page HTML with browser-specific handling
     await this.page.route('**/*', async (route) => {
       const url = route.request().url();
       
       if (url.includes('qc.uapi.sa')) {
-        console.log(`Mocking response for: ${url}`);
+        console.log(`Mocking response for: ${url} in ${browserType} browser`);
         
         // Check for form submission
         if (route.request().method() === 'POST') {
@@ -39,17 +56,17 @@ export class MockService {
             await route.fulfill({
               status: 200,
               contentType: 'text/html',
-              body: this.getLoginPageHtml(true)
+              body: this.getLoginPageHtml(true, browserType)
             });
             return;
           }
         }
         
-        // Serve a mock login page
+        // Serve a mock login page with browser-specific HTML
         await route.fulfill({
           status: 200,
           contentType: 'text/html',
-          body: this.getLoginPageHtml(this.invalidCredentials)
+          body: this.getLoginPageHtml(this.invalidCredentials, browserType)
         });
         return;
       }
@@ -60,9 +77,20 @@ export class MockService {
   }
 
   /**
-   * Get login page HTML with optional error message
+   * Get login page HTML with optional error message and browser-specific styling
    */
-  private getLoginPageHtml(showError: boolean = false): string {
+  private getLoginPageHtml(showError: boolean = false, browserType: string = 'chromium'): string {
+    // Add browser-specific CSS fixes
+    const browserSpecificCSS = browserType === 'firefox' ? 
+      `input { font-family: Arial, sans-serif; } 
+       button { font-family: Arial, sans-serif; }` : 
+      browserType === 'webkit' ? 
+      `input { -webkit-appearance: none; border-radius: 0; } 
+       button { -webkit-appearance: none; border-radius: 0; }` : 
+      '';
+    
+    console.log(`Generating login page HTML for ${browserType} browser`);
+    
     return `
       <!DOCTYPE html>
       <html>
@@ -78,6 +106,8 @@ export class MockService {
           input { width: 100%; padding: 8px; box-sizing: border-box; }
           button { background: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; width: 100%; }
           .error-message { color: red; margin-bottom: 15px; display: ${showError ? 'block' : 'none'}; }
+          /* Browser-specific CSS */
+          ${browserSpecificCSS}
         </style>
       </head>
       <body>
@@ -117,7 +147,7 @@ export class MockService {
   }
 
   /**
-   * Setup mock responses for the dashboard page
+   * Setup mock responses for the dashboard page with browser-specific handling
    */
   public async setupDashboardMocks(): Promise<void> {
     if (!MockService.isMockEnabled) {
@@ -127,11 +157,24 @@ export class MockService {
 
     // Wait for browser to be ready before setting up mocks
     await this.page.waitForLoadState('domcontentloaded');
+    
+    // Get browser type for browser-specific handling
+    const browserType = await BrowserHelper.detectBrowserType(this.page);
+    console.log(`Setting up dashboard mocks for ${browserType} browser`);
 
     await this.page.route('**/dashboard', async (route) => {
-      console.log('Mocking dashboard response');
+      console.log(`Mocking dashboard response for ${browserType} browser`);
       
-      // Serve a mock dashboard page
+      // Add browser-specific CSS fixes
+      const browserSpecificCSS = browserType === 'firefox' ? 
+        `.menu li a { display: inline-block; width: 100%; }
+         .sidebar { overflow-y: auto; }` : 
+        browserType === 'webkit' ? 
+        `.menu li a { -webkit-appearance: none; }
+         .sidebar { -webkit-overflow-scrolling: touch; }` : 
+        '';
+      
+      // Serve a mock dashboard page with browser-specific styling
       await route.fulfill({
         status: 200,
         contentType: 'text/html',
@@ -150,6 +193,8 @@ export class MockService {
               .menu li { padding: 15px 20px; border-bottom: 1px solid #444; }
               .menu li a { color: white; text-decoration: none; display: block; }
               .content { margin-left: 250px; padding: 20px; }
+              /* Browser-specific CSS */
+              ${browserSpecificCSS}
             </style>
           </head>
           <body>
@@ -185,6 +230,23 @@ export class MockService {
                 <p>Your service usage is within normal limits.</p>
               </div>
             </div>
+            <script>
+              // Browser-specific JavaScript adjustments
+              document.addEventListener('DOMContentLoaded', function() {
+                // Log browser information for debugging
+                console.log('Dashboard loaded in ${browserType} browser');
+                
+                // Add browser-specific event handlers
+                const menuItems = document.querySelectorAll('.menu-item');
+                menuItems.forEach(item => {
+                  item.addEventListener('click', function(e) {
+                    console.log('Menu item clicked:', this.textContent);
+                    // For testing purposes, prevent actual navigation
+                    e.preventDefault();
+                  });
+                });
+              });
+            </script>
           </body>
           </html>
         `
