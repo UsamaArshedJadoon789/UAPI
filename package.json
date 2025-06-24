@@ -1,0 +1,17 @@
+{
+  "name": "uapi",
+  "version": "1.0.0",
+  "description": "This contains all work related to Automation of UAPI",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.41.2",
+    "typescript": "^5.0.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
