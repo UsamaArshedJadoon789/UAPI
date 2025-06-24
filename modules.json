@@ -1,0 +1,7 @@
+[
+  { "name": "Users", "selector": "#users-table" },
+  { "name": "Reports", "selector": "#reports-list" },
+  { "name": "Settings", "selector": "#settings-panel" },
+  { "name": "Admin", "selector": "#admin-panel" },
+  { "name": "Projects", "selector": "#projects-board" }
+]
