@@ -155,16 +155,16 @@ export class PackageConfigurationPage extends BasePage {
         await this.page.waitForTimeout(2000);
 
         await ElementHighlighter.highlightElement(this.page, this.firstNameField);
-        await this.fill(this.firstNameField, 'Sundas');
+        await this.fill(this.firstNameField, process.env.TEST_FIRST_NAME || 'Test');
 
         await ElementHighlighter.highlightElement(this.page, this.lastNameField);
-        await this.fill(this.lastNameField, 'Maqbool');
+        await this.fill(this.lastNameField, process.env.TEST_LAST_NAME || 'User');
 
         await ElementHighlighter.highlightElement(this.page, this.nidaField);
-        await this.fill(this.nidaField, '556677896664');
+        await this.fill(this.nidaField, process.env.TEST_NIDA || '556677896664');
 
         await ElementHighlighter.highlightElement(this.page, this.occupationField);
-        await this.fill(this.occupationField, 'QA');
+        await this.fill(this.occupationField, process.env.TEST_OCCUPATION || 'QA');
 
         const uniqueEmail = this.generateRandomEmail();
         await ElementHighlighter.highlightElement(this.page, this.emailField);
@@ -172,15 +172,16 @@ export class PackageConfigurationPage extends BasePage {
         console.log('Generated Email:', uniqueEmail);
 
         await ElementHighlighter.highlightElement(this.page, this.telephoneField);
-        await this.fill(this.telephoneField, '255655116414');
+        await this.fill(this.telephoneField, process.env.TEST_PHONE || '255655116414');
 
         await ElementHighlighter.scrollTo(this.page, 0, 0.5);
 
+        const testPassword = process.env.TEST_PASSWORD || 'TestPassword@123';
         await ElementHighlighter.highlightElement(this.page, this.createPasswordField);
-        await this.fill(this.createPasswordField, 'Cinderella@123456');
+        await this.fill(this.createPasswordField, testPassword);
 
         await ElementHighlighter.highlightElement(this.page, this.confirmPasswordField);
-        await this.fill(this.confirmPasswordField, 'Cinderella@123456');
+        await this.fill(this.confirmPasswordField, testPassword);
 
         await this.page.waitForTimeout(3000);
 
@@ -196,34 +197,34 @@ export class PackageConfigurationPage extends BasePage {
         await this.page.waitForTimeout(2000);
 
         await ElementHighlighter.highlightElement(this.page, this.companyField);
-        await this.fill(this.companyField, 'Axian');
+        await this.fill(this.companyField, process.env.TEST_COMPANY || 'Test Company Ltd');
 
         await ElementHighlighter.highlightElement(this.page, this.typeField);
-        await this.fill(this.typeField, 'Software Hub');
+        await this.fill(this.typeField, process.env.TEST_COMPANY_TYPE || 'Software Development');
 
         await ElementHighlighter.highlightElement(this.page, this.addressField);
-        await this.fill(this.addressField, 'Gulberg');
+        await this.fill(this.addressField, process.env.TEST_ADDRESS || 'Test Address');
 
         await ElementHighlighter.highlightElement(this.page, this.cityField);
-        await this.fill(this.cityField, 'Islamabad');
+        await this.fill(this.cityField, process.env.TEST_CITY || 'Test City');
 
         await ElementHighlighter.highlightElement(this.page, this.postalField);
-        await this.fill(this.postalField, '3301');
+        await this.fill(this.postalField, process.env.TEST_POSTAL || '12345');
 
         await ElementHighlighter.highlightElement(this.page, this.installationField);
-        await this.fill(this.installationField, 'Islamabad');
+        await this.fill(this.installationField, process.env.TEST_INSTALLATION_CITY || 'Test City');
 
         await ElementHighlighter.highlightElement(this.page, this.city1Field);
-        await this.fill(this.city1Field, 'Islamabad');
+        await this.fill(this.city1Field, process.env.TEST_CITY || 'Test City');
 
         await ElementHighlighter.highlightElement(this.page, this.postal1Field);
-        await this.fill(this.postal1Field, '3301');
+        await this.fill(this.postal1Field, process.env.TEST_POSTAL || '12345');
 
         await ElementHighlighter.highlightElement(this.page, this.registrationField);
-        await this.fill(this.registrationField, '777789');
+        await this.fill(this.registrationField, process.env.TEST_REGISTRATION || '123456');
 
         await ElementHighlighter.highlightElement(this.page, this.tinField);
-        await this.fill(this.tinField, '4327');
+        await this.fill(this.tinField, process.env.TEST_TIN || '7890');
 
         await ElementHighlighter.highlightElement(this.page, this.proceedButton);
         await this.click(this.proceedButton);
@@ -250,16 +251,16 @@ export class PackageConfigurationPage extends BasePage {
         await ElementHighlighter.scrollTo(this.page, 0, 0.3);
 
         await ElementHighlighter.highlightElement(this.page, this.paymentFirstNameField);
-        await this.fill(this.paymentFirstNameField, 'Sundas');
+        await this.fill(this.paymentFirstNameField, process.env.TEST_FIRST_NAME || 'Test');
 
         await ElementHighlighter.highlightElement(this.page, this.paymentLastNameField);
-        await this.fill(this.paymentLastNameField, 'Maqbool');
+        await this.fill(this.paymentLastNameField, process.env.TEST_LAST_NAME || 'User');
 
         await ElementHighlighter.highlightElement(this.page, this.paymentPhoneField);
-        await this.fill(this.paymentPhoneField, '25569556414');
+        await this.fill(this.paymentPhoneField, process.env.TEST_PAYMENT_PHONE || '255123456789');
 
         await ElementHighlighter.highlightElement(this.page, this.paymentEmailField);
-        await this.fill(this.paymentEmailField, 'sundasmaqbool123@gmail.com');
+        await this.fill(this.paymentEmailField, process.env.TEST_PAYMENT_EMAIL || 'testuser@example.com');
 
         await this.page.waitForTimeout(2000);
 
@@ -323,7 +324,9 @@ export class PackageConfigurationPage extends BasePage {
 
     private generateRandomEmail(): string {
         const randomNumber = Math.floor(Math.random() * 9000) + 1000;
-        return `ismatmaqbool${randomNumber}@gmail.com`;
+        const emailPrefix = process.env.TEST_EMAIL_PREFIX || 'testuser';
+        const emailDomain = process.env.TEST_EMAIL_DOMAIN || 'example.com';
+        return `${emailPrefix}${randomNumber}@${emailDomain}`;
     }
 
     async isConfigurationButtonDisplayed(): Promise<boolean> {
